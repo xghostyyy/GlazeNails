@@ -6,6 +6,17 @@ import { getEmailChannel } from "./resend";
 const STUDIO_NAME = "Glaze Studio";
 const BASE_URL = process.env.NEXTAUTH_URL ?? "https://glaze.studio";
 
+// Escape user-controlled strings before embedding them in email HTML.
+// Names, service titles and master notes all originate from user input.
+function esc(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function wrap(title: string, body: string): string {
   return `<!DOCTYPE html><html lang="ru"><head><meta charset="utf-8"><title>${title}</title></head>
 <body style="font-family:sans-serif;background:#FAF6F3;margin:0;padding:32px 16px">
@@ -40,7 +51,7 @@ export async function sendNewBookingToMaster(opts: {
     subject: `Новая запись: ${opts.clientName} — ${dateStr}`,
     html: wrap(
       "Новая запись",
-      p(`Клиент <strong>${opts.clientName}</strong> хочет записаться на <strong>${opts.serviceName}</strong>.`) +
+      p(`Клиент <strong>${esc(opts.clientName)}</strong> хочет записаться на <strong>${esc(opts.serviceName)}</strong>.`) +
       p(`Дата: <strong>${dateStr}</strong>`) +
       btn(`${BASE_URL}/master/requests`, "Перейти к запросам"),
     ),
@@ -61,8 +72,8 @@ export async function sendConfirmedToClient(opts: {
     subject: `Запись подтверждена — ${dateStr}`,
     html: wrap(
       "Запись подтверждена ✓",
-      p(`Привет, <strong>${opts.clientName}</strong>!`) +
-      p(`Мастер <strong>${opts.masterName}</strong> подтвердил вашу запись на <strong>${opts.serviceName}</strong>.`) +
+      p(`Привет, <strong>${esc(opts.clientName)}</strong>!`) +
+      p(`Мастер <strong>${esc(opts.masterName)}</strong> подтвердил вашу запись на <strong>${esc(opts.serviceName)}</strong>.`) +
       p(`Ждём вас: <strong>${dateStr}</strong>`) +
       btn(`${BASE_URL}/account`, "Мои записи"),
     ),
@@ -84,9 +95,9 @@ export async function sendRejectedToClient(opts: {
     subject: `Запись отклонена`,
     html: wrap(
       "Запись отклонена",
-      p(`Привет, <strong>${opts.clientName}</strong>!`) +
-      p(`К сожалению, мастер <strong>${opts.masterName}</strong> не может принять вас ${dateStr} на <strong>${opts.serviceName}</strong>.`) +
-      (opts.masterNote ? p(`Причина: <em>${opts.masterNote}</em>`) : "") +
+      p(`Привет, <strong>${esc(opts.clientName)}</strong>!`) +
+      p(`К сожалению, мастер <strong>${esc(opts.masterName)}</strong> не может принять вас ${dateStr} на <strong>${esc(opts.serviceName)}</strong>.`) +
+      (opts.masterNote ? p(`Причина: <em>${esc(opts.masterNote)}</em>`) : "") +
       btn(`${BASE_URL}/booking`, "Выбрать другое время"),
     ),
   });
@@ -106,8 +117,8 @@ export async function sendReminder24h(opts: {
     subject: `Напоминание: завтра запись в ${format(opts.startsAt, "HH:mm")}`,
     html: wrap(
       "Напоминание о записи",
-      p(`Привет, <strong>${opts.clientName}</strong>!`) +
-      p(`Напоминаем о вашей записи: <strong>${opts.serviceName}</strong> у мастера <strong>${opts.masterName}</strong>.`) +
+      p(`Привет, <strong>${esc(opts.clientName)}</strong>!`) +
+      p(`Напоминаем о вашей записи: <strong>${esc(opts.serviceName)}</strong> у мастера <strong>${esc(opts.masterName)}</strong>.`) +
       p(`Время: <strong>${dateStr}</strong>`) +
       btn(`${BASE_URL}/account`, "Посмотреть детали"),
     ),
@@ -127,8 +138,8 @@ export async function sendReviewRequest(opts: {
     subject: `Как прошёл визит? Оставьте отзыв`,
     html: wrap(
       "Как вам визит?",
-      p(`Привет, <strong>${opts.clientName}</strong>!`) +
-      p(`Вы посетили <strong>${opts.serviceName}</strong> у мастера <strong>${opts.masterName}</strong>.`) +
+      p(`Привет, <strong>${esc(opts.clientName)}</strong>!`) +
+      p(`Вы посетили <strong>${esc(opts.serviceName)}</strong> у мастера <strong>${esc(opts.masterName)}</strong>.`) +
       p("Нам важно ваше мнение — оставьте отзыв, это займёт 30 секунд.") +
       btn(`${BASE_URL}/account/appointments/${opts.appointmentId}`, "Оставить отзыв"),
     ),

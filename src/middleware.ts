@@ -4,11 +4,8 @@ import { authConfig } from "@/auth.config";
 export const { auth: middleware } = NextAuth(authConfig);
 
 export const config = {
-  matcher: [
-    "/account/:path*",
-    "/master/:path*",
-    "/admin/:path*",
-    // Skip Next.js internals and static files
-    "/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)",
-  ],
+  // Only run auth middleware on protected areas. Public pages (landing,
+  // /services, /masters, /booking, /login, /register) skip the JWT decode
+  // entirely, keeping them fast.
+  matcher: ["/account/:path*", "/master/:path*", "/admin/:path*"],
 };

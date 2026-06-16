@@ -42,12 +42,26 @@ export async function registerAction(raw: unknown): Promise<ActionResult<{ id: s
   }
 
   const passwordHash = await bcrypt.hash(password, 12);
-  const user = await prisma.user.create({
-    data: { name, email, passwordHash, phone: phone || null, role: "CLIENT" },
-    select: { id: true },
-  });
 
-  return { ok: true, data: { id: user.id } };
+  try {
+    const user = await prisma.user.create({
+      data: { name, email, passwordHash, phone: phone || null, role: "CLIENT" },
+      select: { id: true },
+    });
+    return { ok: true, data: { id: user.id } };
+  } catch (e: unknown) {
+    if (e && typeof e === "object" && "code" in e && e.code === "P2002") {
+      const fields = (e as { meta?: { target?: string[] } }).meta?.target ?? [];
+      if (fields.includes("phone")) {
+        return { ok: false, error: "Этот номер телефона уже зарегистрирован" };
+      }
+      if (fields.includes("email")) {
+        return { ok: false, error: "Пользователь с таким email уже существует" };
+      }
+      return { ok: false, error: "Пользователь с такими данными уже существует" };
+    }
+    throw e;
+  }
 }
 
 export async function logoutAction() {

@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { sendReminder24h } from "@/lib/notifications/emails";
-import { addHours, addMinutes } from "date-fns";
+import { addHours } from "date-fns";
 
-// Called by Vercel Cron every hour.
-// Finds CONFIRMED appointments starting in 23–25 hours and sends reminders.
+// Called by Vercel Cron every hour (see vercel.json).
+// Finds CONFIRMED appointments starting in 24–25 hours and sends one reminder.
+// The window width equals the cron cadence (1h) so each appointment matches
+// exactly once — no dedup field required.
 export async function GET(req: Request) {
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
@@ -15,7 +17,7 @@ export async function GET(req: Request) {
   }
 
   const now = new Date();
-  const windowStart = addHours(now, 23);
+  const windowStart = addHours(now, 24);
   const windowEnd = addHours(now, 25);
 
   const appointments = await prisma.appointment.findMany({
@@ -44,9 +46,6 @@ export async function GET(req: Request) {
 
   const sent = results.filter((r) => r.status === "fulfilled").length;
   const failed = results.filter((r) => r.status === "rejected").length;
-
-  // Mark as having received reminder (use endsAt as proxy — no dedicated field needed)
-  void addMinutes; // unused but helps type inference
 
   return NextResponse.json({ sent, failed, total: appointments.length });
 }

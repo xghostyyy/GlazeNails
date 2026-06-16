@@ -29,7 +29,7 @@ async function main() {
   });
 
   // ─── Services ─────────────────────────────────────────────────────────────
-  const services = await Promise.all([
+  await Promise.all([
     prisma.service.upsert({
       where: { id: "svc-manicure-classic" },
       update: {},
@@ -93,7 +93,7 @@ async function main() {
   ]);
 
   // ─── Admin user ───────────────────────────────────────────────────────────
-  const admin = await prisma.user.upsert({
+  await prisma.user.upsert({
     where: { email: "admin@glaze.studio" },
     update: {},
     create: {

@@ -38,8 +38,33 @@ const getPublishedReviews = unstable_cache(
   { revalidate: 300 }
 );
 
+const getHomeMasters = unstable_cache(
+  async () =>
+    prisma.masterProfile.findMany({
+      where: { canTakeBookings: true },
+      include: { user: { select: { name: true, image: true, avatarUrl: true } } },
+      orderBy: { ratingAvg: "desc" },
+      take: 4,
+    }),
+  ["home-masters"],
+  { revalidate: 300 }
+);
+
 export default async function HomePage() {
-  const reviews = await getPublishedReviews();
+  const [reviews, rawMasters] = await Promise.all([
+    getPublishedReviews(),
+    getHomeMasters(),
+  ]);
+
+  const masters = rawMasters.map((m) => ({
+    id: m.id,
+    name: m.user.name,
+    specialties: m.specialties as string[],
+    ratingAvg: m.ratingAvg,
+    ratingCount: m.ratingCount,
+    image: m.user.image,
+    avatarUrl: m.user.avatarUrl,
+  }));
 
   return (
     <>
@@ -48,7 +73,7 @@ export default async function HomePage() {
         <HeroSection />
         <Separator className="bg-border/50" />
         <ServicesSection compact />
-        <MastersSection compact />
+        <MastersSection compact masters={masters} />
         <Separator className="bg-border/50" />
         <ReviewsSection reviews={reviews} />
         <Separator className="bg-border/50" />

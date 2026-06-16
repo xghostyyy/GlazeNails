@@ -3,8 +3,10 @@ import { prisma } from "@/lib/prisma";
 import { sendReviewRequest } from "@/lib/notifications/emails";
 import { subHours } from "date-fns";
 
-// Called by Vercel Cron every hour.
-// Finds appointments completed in the past 1–25 hours and sends review requests.
+// Called by Vercel Cron every hour (see vercel.json).
+// Finds appointments that finished 1–2 hours ago with no review yet and sends
+// one review request. The window width equals the cron cadence (1h) so each
+// appointment matches exactly once; the `review: null` filter is an extra guard.
 export async function GET(req: Request) {
   const cronSecret = process.env.CRON_SECRET;
   if (cronSecret) {
@@ -15,7 +17,7 @@ export async function GET(req: Request) {
   }
 
   const now = new Date();
-  const windowStart = subHours(now, 25);
+  const windowStart = subHours(now, 2);
   const windowEnd = subHours(now, 1);
 
   // Find recently completed appointments that have no review yet
