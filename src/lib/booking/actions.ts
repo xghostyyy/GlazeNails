@@ -7,6 +7,7 @@ import { getAvailableSlots, isSlotFree } from "@/lib/slots";
 import type { ActionResult } from "@/types/actions";
 import { addMinutes, startOfDay, endOfDay } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
+import { sendNewBookingToMaster } from "@/lib/notifications/emails";
 
 // Stable bigint hash for advisory lock key: combines masterId hash with date epoch
 function advisoryLockKey(masterId: string, date: Date): bigint {
@@ -92,8 +93,23 @@ export async function createBookingAction(raw: unknown): Promise<ActionResult<{ 
           status: "PENDING",
           clientNote: clientNote ?? null,
         },
+        include: {
+          master: { include: { user: { select: { name: true, email: true } } } },
+          service: { select: { name: true } },
+          client: { select: { name: true } },
+        },
       });
     });
+
+    // Notify master about new booking (fire-and-forget)
+    sendNewBookingToMaster({
+      masterEmail: appointment.master.user.email,
+      masterName: appointment.master.user.name,
+      clientName: appointment.client.name,
+      serviceName: appointment.service.name,
+      startsAt: appointment.startsAt,
+      appointmentId: appointment.id,
+    }).catch(console.error);
 
     return { ok: true, data: { id: appointment.id } };
   } catch (e: unknown) {

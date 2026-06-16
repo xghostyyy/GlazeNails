@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { z } from "zod";
 import type { ActionResult } from "@/types/actions";
+import { sendConfirmedToClient, sendRejectedToClient } from "@/lib/notifications/emails";
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
   PENDING:   ["CONFIRMED", "REJECTED", "CANCELLED"],
@@ -51,7 +52,11 @@ export async function updateAppointmentStatusAction(raw: unknown): Promise<Actio
 
   const appt = await prisma.appointment.findUnique({
     where: { id: appointmentId },
-    select: { id: true, masterId: true, status: true },
+    include: {
+      client: { select: { name: true, email: true } },
+      service: { select: { name: true } },
+      master: { include: { user: { select: { name: true } } } },
+    },
   });
   if (!appt) return { ok: false, error: "Запись не найдена" };
 
@@ -73,6 +78,26 @@ export async function updateAppointmentStatusAction(raw: unknown): Promise<Actio
     where: { id: appointmentId },
     data: { status, masterNote: masterNote ?? null, updatedAt: new Date() },
   });
+
+  // Fire-and-forget notifications (no await — don't block response)
+  if (status === "CONFIRMED") {
+    sendConfirmedToClient({
+      clientEmail: appt.client.email,
+      clientName: appt.client.name,
+      masterName: appt.master.user.name,
+      serviceName: appt.service.name,
+      startsAt: appt.startsAt,
+    }).catch(console.error);
+  } else if (status === "REJECTED") {
+    sendRejectedToClient({
+      clientEmail: appt.client.email,
+      clientName: appt.client.name,
+      masterName: appt.master.user.name,
+      serviceName: appt.service.name,
+      startsAt: appt.startsAt,
+      masterNote: masterNote,
+    }).catch(console.error);
+  }
 
   return { ok: true, data: undefined };
 }
