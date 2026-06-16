@@ -1,10 +1,27 @@
+import { Navbar } from "@/components/shared/Navbar";
+import { HeroSection } from "@/components/shared/HeroSection";
+import { ServicesSection } from "@/components/shared/ServicesSection";
+import { MastersSection } from "@/components/shared/MastersSection";
+import { ReviewsSection } from "@/components/shared/ReviewsSection";
+import { CTASection } from "@/components/shared/CTASection";
+import { Footer } from "@/components/shared/Footer";
+import { Separator } from "@/components/ui/separator";
+
 export default function HomePage() {
   return (
-    <main className="min-h-screen flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-semibold">Glaze Studio</h1>
-        <p className="mt-2 text-gray-500">Лендинг — Фаза 1</p>
-      </div>
-    </main>
+    <>
+      <Navbar />
+      <main>
+        <HeroSection />
+        <Separator className="bg-border/50" />
+        <ServicesSection />
+        <MastersSection />
+        <Separator className="bg-border/50" />
+        <ReviewsSection />
+        <Separator className="bg-border/50" />
+        <CTASection />
+      </main>
+      <Footer />
+    </>
   );
 }
