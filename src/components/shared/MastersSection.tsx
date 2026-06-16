@@ -25,7 +25,7 @@ function StarRating({ rating }: { rating: number }) {
 
 export function MastersSection({ compact = false }: { compact?: boolean }) {
   const reduce = useReducedMotion();
-  const displayedMasters = compact ? MASTERS : MASTERS;
+  const displayedMasters = MASTERS;
 
   return (
     <section className="py-20 sm:py-28 bg-gradient-to-b from-transparent via-petal/10 to-transparent" id="masters">
