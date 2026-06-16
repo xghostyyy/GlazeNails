@@ -161,7 +161,7 @@ export function HeroSection() {
               initial={reduce ? undefined : { opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.35, delay: 0.75 + i * 0.09 }}
-              className="slot-chip text-center w-24 select-none text-sm"
+              className="slot-chip-deco text-center w-24 text-sm"
             >
               {t}
             </motion.span>

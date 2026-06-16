@@ -44,16 +44,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     ...authConfig.callbacks,
-    async session({ session, token }) {
+    session({ session, token }) {
       if (token) {
         session.user.id = token.sub!;
-        // Fetch fresh role from DB on each session read
-        const dbUser = await prisma.user.findUnique({
-          where: { id: token.sub! },
-          select: { role: true },
-        });
-        session.user.role = (dbUser?.role ?? "CLIENT") as Role;
-        token.role = session.user.role;
+        session.user.role = ((token.role as string) ?? "CLIENT") as Role;
       }
       return session;
     },

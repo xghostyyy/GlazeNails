@@ -63,7 +63,7 @@ export function CTASection() {
               whileInView={{ opacity: 0.65, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.3, delay: 0.4 + i * 0.06 }}
-              className="slot-chip text-sm"
+              className="slot-chip-deco text-sm"
             >
               {t}
             </motion.span>
