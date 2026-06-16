@@ -1,12 +1,13 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, Inter } from "next/font/google";
+import { auth } from "@/lib/auth";
+import { SessionProvider } from "@/components/shared/SessionProvider";
 import "./globals.css";
 
 const fraunces = Fraunces({
   subsets: ["latin"],
   variable: "--font-fraunces",
   display: "swap",
-  // variable font — no weight array when axes are specified
 });
 
 const inter = Inter({
@@ -30,14 +31,18 @@ export const viewport: Viewport = {
   themeColor: "#FAF6F3",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const session = await auth();
+
   return (
     <html lang="ru" className={`${fraunces.variable} ${inter.variable}`}>
-      <body className="antialiased">{children}</body>
+      <body className="antialiased">
+        <SessionProvider session={session}>{children}</SessionProvider>
+      </body>
     </html>
   );
 }
