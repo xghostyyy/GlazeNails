@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { cancelSchema, rescheduleSchema } from "@/schemas/booking";
 import { reviewSchema } from "@/schemas/review";
-import { getAvailableSlots, isSlotFree } from "@/lib/slots";
+import { isSlotFree } from "@/lib/slots";
 import type { ActionResult } from "@/types/actions";
 import { addHours, addMinutes, startOfDay, endOfDay, isBefore } from "date-fns";
 
