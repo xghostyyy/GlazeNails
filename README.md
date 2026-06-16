@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Glaze Studio
 
-## Getting Started
+Онлайн-запись для студии маникюра и педикюра. Клиенты бронируют за 3 тапа, мастера подтверждают из своего кабинета, владелец видит всю аналитику.
 
-First, run the development server:
+## Стек
+
+- **Next.js 15** (App Router, Turbopack) + TypeScript strict
+- **Tailwind CSS v4** + shadcn/ui
+- **Prisma 7** → PostgreSQL (Neon)
+- **Auth.js v5** — email+пароль, Google OAuth
+- **Zod v4** — валидация на всех границах
+- **Resend** — транзакционные письма
+- **Vitest** — unit-тесты алгоритма слотов
+- **Vercel** (деплой) + Neon (БД)
+
+## Быстрый старт
 
 ```bash
+npm install
+cp .env.example .env.local   # заполни переменные
+npx prisma migrate dev
+npx prisma db seed
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Открой [http://localhost:3000](http://localhost:3000)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Тестовые учётки (после seed)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Роль | Email | Пароль |
+|------|-------|--------|
+| Admin | admin@glaze.studio | admin123 |
+| Master | anna@glaze.studio | master123 |
+| Client | client@glaze.studio | client123 |
 
-## Learn More
+## Команды
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+npm run dev          # дев-сервер
+npm run build        # продакшн-сборка
+npm run lint         # ESLint
+npx vitest run       # все тесты
+npx prisma studio    # GUI базы данных
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Структура
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+src/app/
+  (public)/          — лендинг, /services, /masters, /booking, /login, /register
+  account/           — кабинет клиента
+  master/            — кабинет мастера
+  admin/             — админ-панель
+  api/
+    auth/            — Auth.js handler
+    cron/            — Vercel Cron (напоминания, просьбы об отзыве)
+src/lib/
+  slots/             — алгоритм расчёта слотов (чистые функции + тесты)
+  booking/           — Server Action бронирования с pg_advisory_xact_lock
+  appointments/      — отмена, перенос, отзыв
+  master/            — действия мастера
+  admin/             — действия администратора
+  notifications/     — NotificationChannel abstraction + Resend
+```
 
-## Deploy on Vercel
+## Деплой на Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+1. Подключи репозиторий на [vercel.com](https://vercel.com)
+2. Добавь переменные из `.env.example` в настройки проекта
+3. Vercel Cron активируется автоматически через `vercel.json`
+4. Для Neon: создай проект, скопируй `DATABASE_URL` в Vercel
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+> Перед первым деплоем в продакшн выполни `npx prisma migrate deploy` и `npx prisma db seed`
