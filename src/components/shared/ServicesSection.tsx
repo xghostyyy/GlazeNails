@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
 import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
 
 const SERVICES = [
   { category: "Маникюр", name: "Классический маникюр с покрытием", duration: "60 мин", price: "2 500 ₽", emoji: "💅", tag: "Хит" },
@@ -24,6 +25,7 @@ const ACCENT_GRADIENTS = [
 
 export function ServicesSection({ compact = false }: { compact?: boolean }) {
   const reduce = useReducedMotion();
+  const router = useRouter();
   const displayedServices = compact ? SERVICES.slice(0, 6) : SERVICES;
 
   return (
@@ -51,7 +53,11 @@ export function ServicesSection({ compact = false }: { compact?: boolean }) {
             viewport={{ once: true, amount: 0.08 }}
             transition={{ duration: 0.45, delay: i * 0.07 }}
           >
-            <div className="group card-hover bg-white rounded-2xl overflow-hidden shadow-[var(--shadow-card)] h-full flex flex-col">
+            <button
+              onClick={() => router.push("/booking")}
+              className="group card-hover bg-white rounded-2xl overflow-hidden shadow-[var(--shadow-card)] h-full flex flex-col w-full text-left cursor-pointer focus-visible:ring-2 focus-visible:ring-champagne"
+              aria-label={`Записаться на ${s.name}`}
+            >
               {/* Pearl gradient top accent */}
               <div className={`h-1 bg-gradient-to-r ${ACCENT_GRADIENTS[i % ACCENT_GRADIENTS.length]} opacity-0 group-hover:opacity-100 transition-opacity duration-200`} />
               <div className="p-6 flex flex-col flex-1">
@@ -73,8 +79,11 @@ export function ServicesSection({ compact = false }: { compact?: boolean }) {
                   <span className="text-sm text-mocha/50">{s.duration}</span>
                   <span className="text-sm font-bold text-mocha">{s.price}</span>
                 </div>
+                <div className="mt-3 text-xs font-medium text-mocha/40 group-hover:text-mocha/70 transition-colors flex items-center gap-1">
+                  Записаться <span className="group-hover:translate-x-0.5 transition-transform inline-block">→</span>
+                </div>
               </div>
-            </div>
+            </button>
           </motion.div>
         ))}
       </div>

@@ -30,7 +30,14 @@ export function Footer() {
         </div>
         <div className="mt-10 pt-6 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-2">
           <p className="text-xs text-mocha/40">© {new Date().getFullYear()} Glaze Studio</p>
-          <p className="text-xs text-mocha/40">Онлайн-запись 24/7</p>
+          <a
+            href="https://t.me/xghostyyy"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-xs text-mocha/40 hover:text-mocha transition-colors"
+          >
+            Created by xghostyyy
+          </a>
         </div>
       </div>
     </footer>

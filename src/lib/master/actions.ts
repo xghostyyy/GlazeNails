@@ -16,7 +16,7 @@ const ALLOWED_TRANSITIONS: Record<string, string[]> = {
 };
 
 const updateStatusSchema = z.object({
-  appointmentId: z.string().cuid(),
+  appointmentId: z.string().min(1),
   status: z.enum(["CONFIRMED", "REJECTED", "COMPLETED", "NO_SHOW"]),
   masterNote: z.string().max(500).optional(),
 });

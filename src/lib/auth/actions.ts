@@ -1,11 +1,12 @@
 "use server";
 
-import { signIn, signOut } from "@/lib/auth";
+import { signIn, signOut, auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { registerSchema } from "@/schemas/auth";
 import type { ActionResult } from "@/types/actions";
 import bcrypt from "bcryptjs";
 import { AuthError } from "next-auth";
+import { z } from "zod";
 
 export async function loginAction(formData: FormData): Promise<ActionResult> {
   try {
@@ -51,4 +52,33 @@ export async function registerAction(raw: unknown): Promise<ActionResult<{ id: s
 
 export async function logoutAction() {
   await signOut({ redirectTo: "/" });
+}
+
+const profileSchema = z.object({
+  name: z.string().min(2, "Минимум 2 символа").max(80),
+  phone: z.string().max(20).optional(),
+});
+
+export async function updateProfileAction(raw: unknown): Promise<ActionResult> {
+  const session = await auth();
+  if (!session?.user) return { ok: false, error: "Не авторизован" };
+
+  const parsed = profileSchema.safeParse(raw);
+  if (!parsed.success) {
+    return { ok: false, error: "Проверьте данные", fieldErrors: parsed.error.flatten().fieldErrors as Record<string, string[]> };
+  }
+
+  const { name, phone } = parsed.data;
+
+  if (phone) {
+    const existing = await prisma.user.findFirst({ where: { phone, id: { not: session.user.id } } });
+    if (existing) return { ok: false, error: "Этот номер уже используется" };
+  }
+
+  await prisma.user.update({
+    where: { id: session.user.id },
+    data: { name, phone: phone || null },
+  });
+
+  return { ok: true, data: undefined };
 }

@@ -25,7 +25,7 @@ const serviceSchema = z.object({
   isActive: z.boolean().default(true),
 });
 
-const serviceIdSchema = z.object({ id: z.string().cuid() });
+const serviceIdSchema = z.object({ id: z.string().min(1) });
 
 export async function createServiceAction(raw: unknown): Promise<ActionResult<{ id: string }>> {
   if (!await assertAdmin()) return { ok: false, error: "Недостаточно прав" };
@@ -46,8 +46,8 @@ export async function updateServiceAction(raw: unknown): Promise<ActionResult> {
 
 export async function deleteServiceAction(id: string): Promise<ActionResult> {
   if (!await assertAdmin()) return { ok: false, error: "Недостаточно прав" };
-  const { id: validId } = z.object({ id: z.string().cuid() }).parse({ id });
-  await prisma.service.update({ where: { id: validId }, data: { isActive: false } });
+  if (!id) return { ok: false, error: "ID не указан" };
+  await prisma.service.update({ where: { id }, data: { isActive: false } });
   return { ok: true, data: undefined };
 }
 
@@ -55,7 +55,7 @@ export async function deleteServiceAction(id: string): Promise<ActionResult> {
 
 export async function moderateReviewAction(raw: unknown): Promise<ActionResult> {
   if (!await assertAdmin()) return { ok: false, error: "Недостаточно прав" };
-  const parsed = z.object({ id: z.string().cuid(), isPublished: z.boolean() }).safeParse(raw);
+  const parsed = z.object({ id: z.string().min(1), isPublished: z.boolean() }).safeParse(raw);
   if (!parsed.success) return { ok: false, error: "Некорректные данные" };
   const { id, isPublished } = parsed.data;
   await prisma.review.update({ where: { id }, data: { isPublished } });
@@ -89,12 +89,12 @@ export async function updateStudioSettingsAction(raw: unknown): Promise<ActionRe
 
 export async function adminCancelAppointmentAction(appointmentId: string): Promise<ActionResult> {
   if (!await assertAdmin()) return { ok: false, error: "Недостаточно прав" };
-  const { id } = z.object({ id: z.string().cuid() }).parse({ id: appointmentId });
-  const appt = await prisma.appointment.findUnique({ where: { id }, select: { status: true } });
+  if (!appointmentId) return { ok: false, error: "ID не указан" };
+  const appt = await prisma.appointment.findUnique({ where: { id: appointmentId }, select: { status: true } });
   if (!appt) return { ok: false, error: "Запись не найдена" };
   if (["COMPLETED", "CANCELLED", "REJECTED", "NO_SHOW"].includes(appt.status)) {
     return { ok: false, error: "Нельзя отменить запись в текущем статусе" };
   }
-  await prisma.appointment.update({ where: { id }, data: { status: "CANCELLED" } });
+  await prisma.appointment.update({ where: { id: appointmentId }, data: { status: "CANCELLED" } });
   return { ok: true, data: undefined };
 }

@@ -148,23 +148,25 @@ export function HeroSection() {
           </motion.div>
         </div>
 
-        {/* Decorative slot-chips — desktop */}
+        {/* Interactive slot-chips — desktop */}
         <motion.div
           {...(reduce ? {} : { initial: { opacity: 0, x: 30 }, animate: { opacity: 1, x: 0 } })}
           transition={{ duration: 0.7, delay: 0.65 }}
           className="absolute right-4 sm:right-8 lg:right-16 top-1/2 -translate-y-1/2 hidden lg:flex flex-col gap-2.5"
-          aria-hidden="true"
         >
+          <p className="text-xs text-mocha/40 text-center mb-1 tracking-wider">Свободно сегодня</p>
           {["10:00", "11:30", "13:00", "14:30", "16:00"].map((t, i) => (
-            <motion.span
+            <motion.a
               key={t}
+              href="/booking"
               initial={reduce ? undefined : { opacity: 0, x: 16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.35, delay: 0.75 + i * 0.09 }}
-              className="slot-chip-deco text-center w-24 text-sm"
+              className="slot-chip text-center w-28 text-sm"
+              aria-label={`Записаться на ${t}`}
             >
               {t}
-            </motion.span>
+            </motion.a>
           ))}
         </motion.div>
 
