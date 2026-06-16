@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ─── Enums ───────────────────────────────────────────────────────────────────
+
+enum Role {
+  CLIENT
+  MASTER
+  ADMIN
+}
+
+enum Specialty {
+  MANICURE
+  PEDICURE
+  DESIGN
+  EXTENSION
+  REMOVAL
+}
+
+enum AppointmentStatus {
+  PENDING
+  CONFIRMED
+  COMPLETED
+  REJECTED
+  CANCELLED
+  NO_SHOW
+}
+
+// ─── Auth.js required models ─────────────────────────────────────────────────
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+// ─── Domain models ───────────────────────────────────────────────────────────
+
+model User {
+  id           String  @id @default(cuid())
+  role         Role    @default(CLIENT)
+  name         String
+  phone        String? @unique
+  email        String  @unique
+  emailVerified DateTime?
+  passwordHash String?
+  avatarUrl    String?
+  image        String? // Auth.js OAuth avatar
+  createdAt    DateTime @default(now())
+
+  masterProfile MasterProfile?
+  appointments  Appointment[]  @relation("ClientAppointments")
+  reviews       Review[]
+  accounts      Account[]
+  sessions      Session[]
+}
+
+model MasterProfile {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+  bio             String?
+  specialties     Specialty[]
+  canTakeBookings Boolean   @default(true)
+  ratingAvg       Float     @default(0)
+  ratingCount     Int       @default(0)
+
+  workingHours WorkingHours[]
+  timeOff      TimeOff[]
+  appointments Appointment[]  @relation("MasterAppointments")
+  services     Service[]      @relation("MasterServices")
+}
+
+model Service {
+  id          String    @id @default(cuid())
+  name        String
+  description String?
+  category    Specialty
+  durationMin Int
+  priceCents  Int
+  imageUrl    String?
+  isActive    Boolean   @default(true)
+
+  masters      MasterProfile[] @relation("MasterServices")
+  appointments Appointment[]
+}
+
+model WorkingHours {
+  id       String        @id @default(cuid())
+  masterId String
+  master   MasterProfile @relation(fields: [masterId], references: [id])
+  weekday  Int           // 0=Sun … 6=Sat
+  startMin Int           // minutes from midnight, e.g. 600 = 10:00
+  endMin   Int           // e.g. 1200 = 20:00
+}
+
+model TimeOff {
+  id       String        @id @default(cuid())
+  masterId String
+  master   MasterProfile @relation(fields: [masterId], references: [id])
+  startsAt DateTime
+  endsAt   DateTime
+  reason   String?
+}
+
+model Appointment {
+  id         String            @id @default(cuid())
+  clientId   String
+  client     User              @relation("ClientAppointments", fields: [clientId], references: [id])
+  masterId   String
+  master     MasterProfile     @relation("MasterAppointments", fields: [masterId], references: [id])
+  serviceId  String
+  service    Service           @relation(fields: [serviceId], references: [id])
+  startsAt   DateTime
+  endsAt     DateTime
+  status     AppointmentStatus @default(PENDING)
+  clientNote String?
+  masterNote String?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+
+  review Review?
+
+  @@index([masterId, startsAt])
+}
+
+model Review {
+  id            String      @id @default(cuid())
+  appointmentId String      @unique
+  appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  clientId      String
+  client        User        @relation(fields: [clientId], references: [id])
+  rating        Int
+  text          String?
+  photoUrls     String[]
+  isPublished   Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+}
+
+model StudioSettings {
+  id              String @id @default("singleton")
+  slotGranularity Int    @default(15)
+  bufferAfterMin  Int    @default(15)
+  minLeadHours    Int    @default(2)
+  maxAdvanceDays  Int    @default(45)
+  cancelCutoffH   Int    @default(24)
+  timezone        String @default("Europe/Amsterdam")
+}
