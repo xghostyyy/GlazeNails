@@ -14,8 +14,8 @@ export default function HomePage() {
       <main>
         <HeroSection />
         <Separator className="bg-border/50" />
-        <ServicesSection />
-        <MastersSection />
+        <ServicesSection compact />
+        <MastersSection compact />
         <Separator className="bg-border/50" />
         <ReviewsSection />
         <Separator className="bg-border/50" />
